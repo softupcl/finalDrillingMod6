@@ -10,10 +10,10 @@ export const animeController = async (req, res, payloadBruto, urlparts) => {
 
   if(req.method === 'GET' && !urlparts[2] && !queryObject.search) {
     try {
-      let discos = await AnimeModel.getAll()
+      let animes = await AnimeModel.getAll()
   
       res.writeHead(200, 'OK', { "content-type": "application/json" })
-      res.end(JSON.stringify(discos))
+      res.end(JSON.stringify(animes))
     } catch (err) {
       res.writeHead(500, 'Internal Server Error', { "content-type": "application/json" })
       res.end(JSON.stringify({ message: err.message }))
@@ -21,81 +21,86 @@ export const animeController = async (req, res, payloadBruto, urlparts) => {
   }else if(req.method === 'GET' && !urlparts[2] && queryObject.search) {
 
     const  {nombre} = queryObject.query;
-    const discos = await AnimeModel.getAll()
+    const animes = await AnimeModel.getAll()
 
-    const ids = Object.keys(discos);
+    const ids = Object.keys(animes);
    
     for (let id of ids){
-      let disco = discos[id];
-      if(!disco.titulo.toLowerCase().includes(nombre.toLowerCase())){
-        delete discos[id];
+      let anime = animes[id];
+      if(!anime.titulo.toLowerCase().includes(nombre.toLowerCase())){
+        delete animes[id];
       }
     }
 
     res.writeHead(200, 'OK', { "content-type": "application/json" })
-    res.end(JSON.stringify(discos))
+    res.end(JSON.stringify(animes))
 
   }
   
   // Mostrar anime por id
   else if (req.method == 'GET' && urlparts[2] && urlparts.length <= 3 ) {
-    let disco = await AnimeModel.getById(urlparts[2])
+    let anime = await AnimeModel.getById(urlparts[2])
 
-    if(disco) {
+    if(anime) {
       res.writeHead(200, 'OK', { "content-type": "application/json" })
-      res.end(JSON.stringify(disco))
+      res.end(JSON.stringify(anime))
     } else {
       res.writeHead(404, 'Not Found', { "content-type": "application/json" })
-      res.end(JSON.stringify({ message: 'Disco no encontrado' }))
+      res.end(JSON.stringify({ message: 'Anime no encontrado' }))
     }
   }
   // Crear Anime
   else if(req.method == 'POST' && !urlparts[2]) {
     try {
+
+      const todosAnimes = await AnimeModel.getAll()  
+      const id = parseInt(Object.keys(todosAnimes).at(-1)) + 1 ;
+
       let data = JSON.parse(payloadBruto)
-      let id = crypto.randomUUID()
+      //let id = crypto.randomUUID()
+    
 
 
-      let discos = await AnimeModel.getAll() // 1
-      discos[id] = data //2
+      let animes = await AnimeModel.getAll() // 1
+      animes[id] = data //2
 
-      let status = await AnimeModel.createAndUpdateDisc(discos)
+      let status = await AnimeModel.createAndUpdateAnime(animes)
       if(status) {
         res.writeHead(201, 'Created', { "content-type": "application/json" })
-        res.end(JSON.stringify({ message: 'Disco Creado' }))
+        res.end(JSON.stringify({ message: 'Anime Creado' }))
       } else {
         res.writeHead(500, 'Internal Server Error', { "content-type": "application/json" })
-        res.end(JSON.stringify({message: 'Error interno al crear disco'}))
+        res.end(JSON.stringify({message: 'Error interno al crear anime'}))
       }
     } catch (err) {
       res.writeHead(400, 'Bad Request', { "content-type": "application/json" })
-      res.end(JSON.stringify({ message: 'Solicitud mal hecha'}))
+      res.end(JSON.stringify({ message: 'Error al procesar payload' }))
     }
   }
 
  //Actualizar Anime
   else if ( req.method == 'PUT' && urlparts[2] ) {
     try {
-      let discos = await AnimeModel.getAll()
-      let disco = await AnimeModel.getById(urlparts[2])
+      let animes = await AnimeModel.getAll()
+      let anime = await AnimeModel.getById(urlparts[2])
 
-      if(disco) {
+      if(anime) {
         try {
           let payload = JSON.parse(payloadBruto)
-          disco = { ...disco, ...payload } // disco (singular) actualizado
-          discos[urlparts[2]] = disco // Actualizamos todos los discos
+          anime = { ...anime, ...payload } 
+          animes[urlparts[2]] = anime 
 
-          await AnimeModel.createAndUpdateDisc(discos)
+          await AnimeModel.createAndUpdateAnime(animes)
 
           res.writeHead(200, 'OK', { "content-type": "application/json" })
-          return res.end(JSON.stringify({ message: 'updated', disco }))
+          return res.end(JSON.stringify({ message: 'actualizado', anime }))
         } catch (err) {
           res.writeHead(400, 'Bad Request', { "content-type": "application/json" })
-          return res.end(JSON.stringify({ message: 'Payload mal formado' }))
+          return res.end(JSON.stringify({ message: 'Error en data enviada' }))
         }
       } else {
         res.writeHead(404, 'Not Found', { "content-type": "application/json" })
-        return res.end(JSON.stringify({ message: 'Disco no encontrado' }))
+        return res.end(JSON.stringify({ message: 'Anime no encontrado' }))
       }
     } catch (err) {
       res.writeHead(100, 'algo', { "content-type": "application/json" })
@@ -105,19 +110,19 @@ export const animeController = async (req, res, payloadBruto, urlparts) => {
 
   //Borrar Anime
   else if( req.method == 'DELETE' && urlparts[2] ) {
-    let discos = await AnimeModel.getAll()
+    let animes = await AnimeModel.getAll()
 
-    let ids = Object.keys(discos)
+    let ids = Object.keys(animes)
     if(ids.includes(urlparts[2])) {
-      delete discos[urlparts[2]]
+      delete animes[urlparts[2]]
 
-      await AnimeModel.createAndUpdateDisc(discos)
+      await AnimeModel.createAndUpdateAnime(animes)
 
       res.writeHead(200, 'OK', { "content-type": "application/json" })
-      return res.end((JSON.stringify({ message: "Disco eliminado con éxito" })))
+      return res.end((JSON.stringify({ message: "Anime eliminado con éxito" })))
     } else {
       res.writeHead(404, 'Not Found', { "content-type": "application/json" })
-      return res.end(JSON.stringify({ message: "Disco no encontrado" }))
+      return res.end(JSON.stringify({ message: "Anime no encontrado" }))
     }
   }
 }

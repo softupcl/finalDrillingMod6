@@ -1,7 +1,3 @@
-/**
- * Grabamos o leemos datos relativos a Los Beatles
- */
-
 import {
   updateFile,
   readFile,
@@ -12,20 +8,20 @@ export class AnimeModel {
   static fileName = 'anime.json'
 
   static async getAll() {
-    let discos = await readFile(AnimeModel.folder, AnimeModel.fileName)
+    let animes = await readFile(AnimeModel.folder, AnimeModel.fileName)
 
-    return discos
+    return animes
   }
 
   static async getById(id) {
-    let discos = await AnimeModel.getAll()
+    let animes = await AnimeModel.getAll()
 
-    return discos[id]
+    return animes[id]
   }
 
-  static async createAndUpdateDisc(discos) {
+  static async createAndUpdateAnime(animes) {
     try {
-      await updateFile(AnimeModel.folder, AnimeModel.fileName, discos)
+      await updateFile(AnimeModel.folder, AnimeModel.fileName, animes)
       return true
     } catch (error) {
       console.error(error)
